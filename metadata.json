@@ -1,0 +1,5 @@
+{
+  "name": "GiftShip",
+  "description": "Applicazione per gestire mittenti, destinatari e creare etichette di spedizione in formato A5 per pacchi regalo.",
+  "requestFramePermissions": []
+}

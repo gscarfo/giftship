@@ -1,0 +1,12 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/((?!api/.*).*)", "destination": "/index.html" }
+  ],
+  "env": {
+    "DATABASE_URL": "postgresql://neondb_owner:npg_ufKoA82XBHsp@ep-dry-grass-agy5jy7d-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+  }
+}
