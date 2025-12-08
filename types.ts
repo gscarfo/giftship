@@ -25,3 +25,5 @@ export enum Section {
 }
 
 export type ContactType = 'sender' | 'recipient';
+
+export type LabelStyle = 'classic' | 'modern' | 'minimal' | 'festive';

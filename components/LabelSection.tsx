@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Contact, Label } from '../types';
+import { Contact, Label, LabelStyle } from '../types';
 import { LabelPreview } from './LabelPreview';
-import { Trash2, Printer, Download, Plus, Eye } from 'lucide-react';
+import { Trash2, Printer, Download, Plus, Eye, LayoutTemplate, Palette } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -17,6 +17,7 @@ export const LabelSection: React.FC<LabelSectionProps> = ({ senders, recipients,
   const [selectedSenderId, setSelectedSenderId] = useState<string>('');
   const [selectedRecipientId, setSelectedRecipientId] = useState<string>('');
   const [viewLabel, setViewLabel] = useState<Label | null>(null);
+  const [labelStyle, setLabelStyle] = useState<LabelStyle>('classic');
   const printRef = useRef<HTMLDivElement>(null);
 
   const handleCreate = () => {
@@ -47,7 +48,8 @@ export const LabelSection: React.FC<LabelSectionProps> = ({ senders, recipients,
       const canvas = await html2canvas(printRef.current, {
         scale: 2, // Higher scale for better quality
         useCORS: true,
-        logging: false
+        logging: false,
+        backgroundColor: null // Preserve transparent backgrounds if any
       });
       const imgData = canvas.toDataURL('image/png');
       
@@ -67,6 +69,13 @@ export const LabelSection: React.FC<LabelSectionProps> = ({ senders, recipients,
   const handlePrint = () => {
     window.print();
   };
+
+  const styles: { id: LabelStyle; name: string; color: string }[] = [
+    { id: 'classic', name: 'Classico', color: 'bg-indigo-100 border-indigo-300 text-indigo-800' },
+    { id: 'modern', name: 'Moderno', color: 'bg-gray-800 border-gray-600 text-white' },
+    { id: 'minimal', name: 'Minimal', color: 'bg-white border-gray-300 text-gray-800' },
+    { id: 'festive', name: 'Festivo', color: 'bg-red-100 border-red-300 text-red-800' },
+  ];
 
   return (
     <div className="space-y-8">
@@ -152,20 +161,39 @@ export const LabelSection: React.FC<LabelSectionProps> = ({ senders, recipients,
         </div>
 
         {/* Preview Area */}
-        <div className="lg:col-span-2 bg-gray-200 p-8 rounded-xl flex flex-col items-center justify-center min-h-[500px]">
+        <div className="lg:col-span-2 bg-gray-200 p-8 rounded-xl flex flex-col items-center justify-start min-h-[500px]">
           {viewLabel ? (
             <div className="flex flex-col items-center space-y-6 w-full">
+              
+              {/* Style Selector Toolbar */}
+              <div className="flex flex-wrap justify-center gap-3 w-full max-w-md p-3 bg-white rounded-full shadow-sm no-print">
+                {styles.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setLabelStyle(s.id)}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all border-2 ${
+                      labelStyle === s.id 
+                        ? 'ring-2 ring-offset-2 ring-indigo-500 shadow-md ' + s.color 
+                        : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    {s.name}
+                  </button>
+                ))}
+              </div>
+
+              {/* Action Buttons */}
               <div className="flex space-x-4 no-print">
                 <button 
                   onClick={handlePrint}
-                  className="flex items-center space-x-2 bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900"
+                  className="flex items-center space-x-2 bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900 shadow-sm"
                 >
                   <Printer size={18} />
                   <span>Stampa</span>
                 </button>
                 <button 
                   onClick={handleDownloadPDF}
-                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 shadow-sm"
                 >
                   <Download size={18} />
                   <span>PDF</span>
@@ -173,12 +201,12 @@ export const LabelSection: React.FC<LabelSectionProps> = ({ senders, recipients,
               </div>
 
               {/* The printable component wrapper */}
-              <div className="printable-area transform scale-[0.6] sm:scale-[0.8] md:scale-100 origin-top shadow-2xl">
-                 <LabelPreview ref={printRef} label={viewLabel} />
+              <div className="printable-area transform scale-[0.6] sm:scale-[0.8] md:scale-100 origin-top shadow-2xl mt-4">
+                 <LabelPreview ref={printRef} label={viewLabel} style={labelStyle} />
               </div>
             </div>
           ) : (
-            <div className="text-center text-gray-500">
+            <div className="text-center text-gray-500 mt-20">
               <Eye size={48} className="mx-auto mb-2 opacity-50" />
               <p>Seleziona o crea un'etichetta per visualizzarne l'anteprima</p>
             </div>
