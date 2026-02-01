@@ -26,10 +26,8 @@ function App() {
   // Load Initial Data
   const fetchData = async () => {
     setLoading(true);
+    setDbStatus('connecting');
     try {
-      // Ensure DB tables exist before querying
-      await storageService.setup();
-
       const [s, r, l] = await Promise.all([
         storageService.getSenders(),
         storageService.getRecipients(),
@@ -41,17 +39,8 @@ function App() {
       setDbStatus('connected');
       setErrorMessage('');
     } catch (error: any) {
-      console.error("Error fetching data", error);
-      
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const is404 = error.message && error.message.includes('404');
-
-      if (isLocalhost && is404) {
-         setErrorMessage('In locale le API non funzionano. Pubblica su Vercel per testare.');
-         // We set status to error, but the message explains it's expected locally
-      } else {
-         setErrorMessage(error.message || 'Errore di connessione');
-      }
+      console.error("Error fetching data from Firebase", error);
+      setErrorMessage(error.message || 'Errore di connessione a Firebase');
       setDbStatus('error');
     } finally {
       setLoading(false);
@@ -69,12 +58,11 @@ function App() {
     
     try {
       await storageService.saveContact(contact, type);
-      await fetchData(); // Refresh all data
+      await fetchData(); 
       setIsEditing(false);
       setEditingContact(undefined);
     } catch (error: any) {
-      alert("Errore durante il salvataggio. Controlla la connessione al database.");
-      setDbStatus('error');
+      alert("Errore durante il salvataggio su Firebase.");
       setErrorMessage(error.message);
     } finally {
       setLoading(false);
@@ -89,7 +77,6 @@ function App() {
       await fetchData();
     } catch (error: any) {
       alert("Errore durante l'eliminazione");
-      setDbStatus('error');
       setErrorMessage(error.message);
     } finally {
       setLoading(false);
@@ -108,8 +95,7 @@ function App() {
       await storageService.addLabel(label);
       await fetchData();
     } catch (error: any) {
-      alert("Errore salvataggio etichetta");
-      setDbStatus('error');
+      alert("Errore salvataggio etichetta su Firebase");
       setErrorMessage(error.message);
     } finally {
       setLoading(false);
@@ -124,7 +110,6 @@ function App() {
       await fetchData();
     } catch (error: any) {
       alert("Errore eliminazione etichetta");
-      setDbStatus('error');
       setErrorMessage(error.message);
     } finally {
       setLoading(false);
@@ -181,8 +166,7 @@ function App() {
               {dbStatus === 'error' && (
                 <div className="group relative flex items-center">
                    <AlertCircle size={16} className="cursor-help" />
-                   {/* Tooltip always visible if it's the specific localhost error, otherwise on hover */}
-                   <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900 text-white text-xs p-2 rounded z-50 transition-opacity ${errorMessage.includes('locale') ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} pointer-events-none`}>
+                   <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900 text-white text-xs p-2 rounded z-50 opacity-0 group-hover:opacity-100 pointer-events-none`}>
                      {errorMessage}
                    </div>
                 </div>
@@ -190,8 +174,8 @@ function App() {
               {dbStatus === 'connecting' && <Loader2 size={16} className="animate-spin" />}
               
               <span className="text-xs font-medium">
-                {dbStatus === 'connected' && 'DB Connesso'}
-                {dbStatus === 'error' && (errorMessage.includes('locale') ? 'Info Localhost' : 'Errore DB')}
+                {dbStatus === 'connected' && 'Firebase Connesso'}
+                {dbStatus === 'error' && 'Errore Firebase'}
                 {dbStatus === 'connecting' && 'Connessione...'}
               </span>
            </div>
@@ -232,7 +216,6 @@ function App() {
         </header>
 
         <div className="p-8">
-          {/* Label Section */}
           {activeSection === Section.LABELS && (
             <LabelSection 
               senders={senders} 
@@ -243,7 +226,6 @@ function App() {
             />
           )}
 
-          {/* Contact Sections (Senders/Recipients) */}
           {(activeSection === Section.SENDERS || activeSection === Section.RECIPIENTS) && (
             <>
               {isEditing ? (
